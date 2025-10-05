@@ -9,7 +9,142 @@
   --color-muted: #94a3b8;
 }
 
-/* Map Figma tokens to CSS variables dynamically at runtime if needed */
-.prose h1 { @apply text-3xl font-bold; }
-.prose h2 { @apply text-2xl font-semibold; }
-.prose p { @apply leading-relaxed; }
+/* General prose container */
+.prose {
+  color: var(--color-ink);
+  max-width: none;
+}
+
+/* Headings: spacing + subtle color */
+.prose h1 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-size: 1.875rem; /* 3xl */
+  font-weight: 700;
+  color: var(--color-brand);
+}
+
+.prose h2 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.5rem; /* 2xl */
+  font-weight: 600;
+  color: var(--color-brand);
+}
+
+.prose h3 {
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem; /* xl */
+  font-weight: 600;
+  color: var(--color-brand);
+}
+
+/* Paragraphs */
+.prose p {
+  line-height: 1.75;
+  margin-bottom: 1rem;
+}
+
+/* Lists */
+.prose ul,
+.prose ol {
+  padding-left: 1.5rem;
+  margin-top: 0.75rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.6;
+}
+
+.prose li {
+  margin-bottom: 0.4rem;
+}
+
+.prose ul > li::marker {
+  color: var(--color-brand);
+}
+
+.prose ol > li::marker {
+  color: var(--color-muted);
+}
+
+/* Horizontal rule */
+.prose hr {
+  border-top: 1px solid var(--color-muted);
+  margin: 1.5rem 0;
+}
+
+/* Blockquote */
+.prose blockquote {
+  border-left: 4px solid var(--color-brand);
+  padding-left: 1rem;
+  color: var(--color-muted);
+  font-style: italic;
+  margin: 1rem 0;
+}
+
+/* Code blocks */
+.prose pre {
+  background: #111827;
+  color: #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1.25rem 0;
+  overflow-x: auto;
+}
+
+.prose code {
+  color: #93c5fd;
+}
+
+/* --- Force bullet rendering inside .prose blocks --- */
+.prose ul,
+.prose ol {
+  list-style-type: disc !important;
+  list-style-position: outside !important;
+  padding-left: 1.5rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.prose ol {
+  list-style-type: decimal !important;
+}
+
+.prose li {
+  display: list-item !important;
+  margin-bottom: 0.25rem;
+}
+
+/* Render hyphen-style bullets instead of filled dots */
+.prose ul > li::marker {
+  content: "- ";
+  color: var(--color-brand);
+  font-weight: 600;
+}
+
+/* --- Table Styling for Standards Pages --- */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.25rem 0;
+  font-size: 0.95rem;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid var(--color-muted);
+  padding: 0.5rem 0.75rem;
+  vertical-align: top;
+  text-align: left;
+}
+
+.prose th {
+  background-color: rgba(148, 163, 184, 0.15); /* subtle muted header */
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.prose tr:nth-child(even) {
+  background-color: rgba(148, 163, 184, 0.05);
+}
+
