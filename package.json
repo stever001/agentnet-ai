@@ -1,0 +1,16 @@
+{
+  "name": "agentnet-ai",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix agentnet-backend\" \"npm run dev --prefix agentnet-frontend\"",
+    "build:frontend": "npm run build --prefix agentnet-frontend",
+    "build:unified": "npm run build --prefix agentnet-frontend && npm run copy:frontend",
+    "copy:frontend": "rm -rf agentnet-backend/public && mkdir -p agentnet-backend/public && cp -r agentnet-frontend/dist/* agentnet-backend/public/",
+    "build": "npm run build:frontend", 
+    "start:split": "concurrently \"npm run start --prefix agentnet-backend\" \"npm run serve --prefix agentnet-frontend\"",
+    "start:unified": "npm run build:unified && npm run start --prefix agentnet-backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
