@@ -1,130 +1,102 @@
-// src/components/Navbar.jsx
-import { useEffect, useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
-import axios from 'axios'
-import { motion, AnimatePresence } from 'framer-motion'
-
-const linkBase = 'px-3 py-2 rounded-xl hover:opacity-90 transition'
-const active = 'bg-brand text-surface'
-const inactive = 'text-ink/80'
+import { Link, NavLink } from "react-router-dom";
+import { useState } from "react";
 
 export default function Navbar() {
-  const [extraPages, setExtraPages] = useState([])
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const baseLinks = [
-    { slug: 'about', label: 'About' },
-    { slug: 'standards', label: 'Standards' },
-    { slug: 'docs', label: 'Docs' }
-  ]
-
-  useEffect(() => {
-    const base = import.meta.env.VITE_API_BASE
-    axios
-      .get(`${base}/api/pages`)
-      .then(r => {
-        const filtered = r.data.filter(
-          p =>
-            !['home', 'about', 'docs', 'standards'].includes(
-              p.slug.toLowerCase()
-            )
-        )
-        setExtraPages(filtered)
-      })
-      .catch(err => {
-        console.error('Error fetching nav pages:', err)
-        setExtraPages([])
-      })
-  }, [])
-
-  const allLinks = [
-    ...baseLinks,
-    ...extraPages.map(p => ({ slug: p.slug, label: p.title }))
-  ]
+  const navLinks = [
+    { name: "About", path: "/about" },
+    { name: "Standards", path: "/standards" },
+    { name: "Docs", path: "/docs" },
+  ];
 
   return (
-    <header className="w-full border-b border-white/10 bg-surface/80 backdrop-blur relative z-50">
-      <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-        {/* Brand */}
-        <Link to="/" className="text-xl font-bold">
-          AgentNet.ai
+    <header className="w-full bg-white border-b border-slate-200">
+      <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-10 py-4">
+        {/* LEFT: Logo and Tagline */}
+        <Link
+          to="/"
+          className="flex items-center gap-3 text-slate-900 hover:opacity-80 transition"
+        >
+          {/* Placeholder logo */}
+          <div className="w-9 h-9 bg-slate-800 rounded-full flex items-center justify-center text-white font-bold text-lg">
+            A
+          </div>
+          <div className="flex flex-col leading-tight">
+            <span className="font-bold text-lg tracking-tight">AgentNet</span>
+            <span className="text-sm text-slate-500 italic">
+              Where Agents Play
+            </span>
+          </div>
         </Link>
 
-        {/* Fixed minimal links */}
-        <nav className="flex items-center gap-2">
-          {baseLinks.map(l => (
+        {/* RIGHT: Navigation links */}
+        <div className="hidden md:flex items-center gap-8">
+          {navLinks.map((link) => (
             <NavLink
-              key={l.slug}
-              to={`/${l.slug}`}
+              key={link.path}
+              to={link.path}
               className={({ isActive }) =>
-                `${linkBase} ${isActive ? active : inactive}`
+                `text-slate-700 hover:text-blue-700 transition ${
+                  isActive ? "font-semibold text-blue-800" : ""
+                }`
               }
             >
-              {l.label}
+              {link.name}
             </NavLink>
           ))}
-        </nav>
+        </div>
 
-        {/* Hamburger always visible */}
+        {/* Mobile Menu Toggle */}
         <button
-          className="px-3 py-2 rounded-xl hover:bg-white/10 text-2xl"
+          className="md:hidden text-slate-700"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle menu"
         >
-          ☰
-        </button>
-      </div>
-
-      {/* Slide-in drawer */}
-      <AnimatePresence>
-        {menuOpen && (
-          <>
-            {/* Dim background */}
-            <motion.div
-              className="fixed inset-0 bg-black/40 z-40"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMenuOpen(false)}
-            />
-            {/* Drawer panel */}
-            <motion.aside
-              className="fixed top-0 right-0 h-full w-64 bg-surface border-l border-white/10 shadow-xl z-50 p-6 flex flex-col"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'tween', duration: 0.3 }}
+          {/* Inline SVGs for Menu / Close */}
+          {!menuOpen ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-lg font-semibold">Navigation</h2>
-                <button
-                  onClick={() => setMenuOpen(false)}
-                  className="text-2xl hover:opacity-80"
-                  aria-label="Close menu"
-                >
-                  ×
-                </button>
-              </div>
-              <nav className="flex flex-col gap-2">
-                {allLinks.map(l => (
-                  <NavLink
-                    key={l.slug}
-                    to={`/${l.slug}`}
-                    className={({ isActive }) =>
-                      `block ${linkBase} ${
-                        isActive ? active : inactive
-                      } hover:bg-white/10`
-                    }
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {l.label}
-                  </NavLink>
-                ))}
-              </nav>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+        </button>
+      </nav>
+
+      {/* Mobile Drawer */}
+      {menuOpen && (
+        <div className="md:hidden bg-white border-t border-slate-200">
+          {navLinks.map((link) => (
+            <NavLink
+              key={link.path}
+              to={link.path}
+              onClick={() => setMenuOpen(false)}
+              className={({ isActive }) =>
+                `block px-6 py-3 text-slate-700 hover:bg-slate-50 ${
+                  isActive ? "font-semibold text-blue-700" : ""
+                }`
+              }
+            >
+              {link.name}
+            </NavLink>
+          ))}
+        </div>
+      )}
     </header>
-  )
+  );
 }

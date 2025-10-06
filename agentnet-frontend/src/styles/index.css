@@ -2,6 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* === GLOBAL BACKGROUND + TYPOGRAPHY RESET === */
+html,
+body,
+#root {
+  @apply text-slate-800;
+  background-color: #ffffff !important; /* Matches Navbar + main container */
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Optional ICANN-style off-white backdrop
+html, body, #root {
+  background-color: #f9fafc !important;
+}
+*/
+
+/* Remove any dark background artifacts */
+* {
+  box-sizing: border-box;
+}
+
+/* === EXISTING PROSE + MARKDOWN STYLING (unchanged) === */
+
 :root {
   --color-brand: #0ea5e9;
   --color-surface: #0b1020;
@@ -147,4 +172,3 @@
 .prose tr:nth-child(even) {
   background-color: rgba(148, 163, 184, 0.05);
 }
-
