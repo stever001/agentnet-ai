@@ -1,6 +1,6 @@
 // agentnet-backend/src/models/index.js
-const { Sequelize } = require('sequelize')
-const config = require('../config/db')
+const { Sequelize, DataTypes } = require('sequelize');
+const config = require('../config/db');
 
 const sequelize = new Sequelize(
   config.database,
@@ -12,13 +12,15 @@ const sequelize = new Sequelize(
     dialect: config.dialect,
     logging: false,
   }
-)
+);
 
-const Page = require('./page')(sequelize)
-const Standard = require('./standard')(sequelize)
+const Page = require('./page')(sequelize, DataTypes);
+const Standard = require('./standard')(sequelize, DataTypes);
+const AdminUser = require('./AdminUser')(sequelize, DataTypes);
 
 module.exports = {
-  sequelize,  // ✅ make sure this is exported
+  sequelize,
   Page,
   Standard,
-}
+  AdminUser, // ✅ now exported properly
+};

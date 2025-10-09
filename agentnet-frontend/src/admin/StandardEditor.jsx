@@ -1,232 +1,286 @@
 // agentnet-frontend/src/admin/StandardEditor.jsx
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { api } from '../lib/api'
-
-const EMPTY = {
-  slug: '',
-  title: '',
-  description: '',
-  content_md: '',
-  status: 'draft', // 'draft' | 'published'
-}
+import { useParams, useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 export default function StandardEditor() {
   const { slug } = useParams()
-  const isNew = slug === '__new'
-  const nav = useNavigate()
+  const navigate = useNavigate()
 
-  const [form, setForm] = useState(EMPTY)
-  const [origSlug, setOrigSlug] = useState('')
-  const [loading, setLoading] = useState(!isNew)
-  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+  const [groups, setGroups] = useState([])
 
+  const [groupSelection, setGroupSelection] = useState('')
+  const [customGroup, setCustomGroup] = useState('')
+
+  const [form, setForm] = useState({
+    title: '',
+    slug: '',
+    version: '',
+    summary: '',
+    content_md: '',
+    group: '',
+    section: '',
+    status: 'draft',
+  })
+
+  // --- Fetch available groups for dropdown ---
   useEffect(() => {
-    let cancelled = false
-
-    async function loadExisting() {
-      setLoading(true)
-      setError('')
-      try {
-        // Use the admin list so we can edit drafts too
-        const { data } = await api.get('/standards/all')
-        const found = (data || []).find(s => s.slug === slug)
-        if (!cancelled) {
-          if (!found) {
-            setError('Standard not found.')
-          } else {
-            setForm({
-              slug: found.slug || '',
-              title: found.title || '',
-              description: found.description || '',
-              content_md: found.content_md || '',
-              status: found.status || 'draft',
-            })
-            setOrigSlug(found.slug || '')
-          }
-        }
-      } catch (e) {
-        console.error(e)
-        if (!cancelled) setError('Failed to load standard.')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    if (!isNew) loadExisting()
-    else {
-      setForm(EMPTY)
-      setOrigSlug('')
-    }
-
-    return () => {
-      cancelled = true
-    }
-  }, [slug, isNew])
-
-  async function save() {
-    setSaving(true)
-    setError('')
-    try {
-      if (!form.slug || !form.title || !form.content_md) {
-        setError('Please fill slug, title, and content.')
-        setSaving(false)
-        return
-      }
-
-      // Upsert
-      await api.post('/standards', {
-        slug: form.slug.trim(),
-        title: form.title.trim(),
-        description: form.description || '',
-        content_md: form.content_md,
-        status: form.status || 'draft',
+    const base = import.meta.env.VITE_API_BASE || ''
+    const token = localStorage.getItem('agentnet_admin_token')
+    if (!token) return
+    axios
+      .get(`${base}/api/standards/groups`, {
+        headers: { Authorization: `Bearer ${token}` },
       })
+      .then((res) => setGroups(res.data || []))
+      .catch((err) => {
+        console.warn('Warning: could not fetch groups:', err.message)
+        setGroups([])
+      })
+  }, [])
 
-      // If editing + slug changed, optionally remove the old one to avoid duplicates
-      if (!isNew && origSlug && origSlug !== form.slug.trim()) {
-        try {
-          await api.delete(`/standards/${encodeURIComponent(origSlug)}`)
-        } catch (e) {
-          console.warn('Old slug cleanup failed (non-fatal):', e)
+  // --- Load existing standard for editing (skip __new) ---
+  useEffect(() => {
+    if (!slug || slug === '__new') {
+      setLoading(false)
+      return
+    }
+
+    const base = import.meta.env.VITE_API_BASE || ''
+    const token = localStorage.getItem('agentnet_admin_token')
+
+    axios
+      .get(`${base}/api/standards/admin/${slug}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        if (res.data) {
+          // normalize status to lowercase for consistency
+          const normalized = {
+            ...res.data,
+            status: res.data.status ? res.data.status.toLowerCase() : 'draft',
+          }
+          setForm((prev) => ({ ...prev, ...normalized }))
+          setGroupSelection(res.data.group || '')
         }
+      })
+      .catch((err) => {
+        console.error('Error fetching standard:', err)
+        setError('Failed to load standard')
+      })
+      .finally(() => setLoading(false))
+  }, [slug])
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setForm((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
+
+    try {
+      const base = import.meta.env.VITE_API_BASE || ''
+      const token = localStorage.getItem('agentnet_admin_token')
+      const headers = { Authorization: `Bearer ${token}` }
+
+      const payload = { ...form }
+
+      // merge custom group if used
+      if (groupSelection === '__custom' && customGroup.trim()) {
+        payload.group = customGroup.trim()
+      } else {
+        payload.group = groupSelection || form.group
       }
 
-      nav('/admin/standards')
-    } catch (e) {
-      console.error(e)
-      setError('Save failed.')
+      // ensure status stays lowercase
+      if (payload.status) payload.status = payload.status.toLowerCase()
+
+      // create or update
+      if (!slug || slug === '__new') {
+        await axios.post(`${base}/api/standards`, payload, { headers })
+      } else {
+        await axios.put(`${base}/api/standards/${slug}`, payload, { headers })
+      }
+
+      navigate('/admin/standards')
+    } catch (err) {
+      console.error('Error saving standard:', err)
+      setError('Failed to save standard')
     } finally {
       setSaving(false)
     }
   }
 
-  async function remove() {
-    if (isNew) return
-    const yes = window.confirm(`Delete "${origSlug}"? This cannot be undone.`)
-    if (!yes) return
-    try {
-      await api.delete(`/standards/${encodeURIComponent(origSlug)}`)
-      nav('/admin/standards')
-    } catch (e) {
-      console.error(e)
-      alert('Delete failed.')
-    }
-  }
-
   if (loading) {
-    return <div className="opacity-70 text-sm">Loading…</div>
-  }
-  if (error) {
     return (
-      <div className="space-y-4">
-        <div className="text-red-400">{error}</div>
-        <button
-          className="px-3 py-2 rounded border border-gray-600"
-          onClick={() => nav('/admin/standards')}
-        >
-          Back to list
-        </button>
-      </div>
+      <section className="max-w-4xl mx-auto p-6">
+        <h1 className="text-2xl font-semibold mb-4 text-slate-900">Standard Editor</h1>
+        <p className="text-slate-500">Loading…</p>
+      </section>
     )
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">
-          {isNew ? 'New Standard' : `Edit: ${origSlug}`}
-        </h2>
-        {!isNew && (
-          <button
-            onClick={remove}
-            className="px-3 py-2 rounded bg-red-600/80 text-white hover:bg-red-600"
-          >
-            Delete
-          </button>
-        )}
-      </div>
+    <section className="max-w-4xl mx-auto p-6">
+      <h1 className="text-2xl font-semibold mb-6 text-slate-900">
+        {slug && slug !== '__new' ? 'Edit Standard' : 'Create Standard'}
+      </h1>
 
-      <div className="grid gap-3">
-        <label className="grid gap-1">
-          <span className="text-sm opacity-80">Slug</span>
-          <input
-            value={form.slug}
-            onChange={e => setForm(f => ({ ...f, slug: e.target.value }))}
-            placeholder="unique-identifier"
-            className="px-3 py-2 rounded border border-gray-700 bg-transparent outline-none"
-          />
-        </label>
-
-        <label className="grid gap-1">
-          <span className="text-sm opacity-80">Title</span>
-          <input
-            value={form.title}
-            onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-            placeholder="Human-readable title"
-            className="px-3 py-2 rounded border border-gray-700 bg-transparent outline-none"
-          />
-        </label>
-
-        <label className="grid gap-1">
-          <span className="text-sm opacity-80">Status</span>
-          <select
-            value={form.status}
-            onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
-            className="px-3 py-2 rounded border border-gray-700 bg-transparent outline-none"
-          >
-            <option value="draft">draft</option>
-            <option value="published">published</option>
-          </select>
-        </label>
-
-        <label className="grid gap-1">
-          <span className="text-sm opacity-80">Description (optional)</span>
-          <input
-            value={form.description}
-            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-            placeholder="Short summary for lists/previews"
-            className="px-3 py-2 rounded border border-gray-700 bg-transparent outline-none"
-          />
-        </label>
-
-        <label className="grid gap-1">
-          <span className="text-sm opacity-80">Content (Markdown)</span>
-          <textarea
-            value={form.content_md}
-            onChange={e => setForm(f => ({ ...f, content_md: e.target.value }))}
-            placeholder="# Heading\n\nBody text in **Markdown**…"
-            className="px-3 py-2 rounded border border-gray-700 bg-transparent outline-none min-h-[320px]"
-          />
-        </label>
-      </div>
-
-      <div className="flex gap-2">
-        <button
-          disabled={saving}
-          onClick={save}
-          className="px-4 py-2 rounded bg-indigo-600 text-white disabled:opacity-60"
-        >
-          {saving ? 'Saving…' : 'Save'}
-        </button>
-        <button
-          onClick={() => nav('/admin/standards')}
-          className="px-4 py-2 rounded border border-gray-600"
-        >
-          Cancel
-        </button>
-      </div>
-
-      {/* Optional: simple live preview */}
-      {form.content_md?.trim() && (
-        <details className="mt-6">
-          <summary className="cursor-pointer opacity-80">Raw Markdown preview</summary>
-          <pre className="mt-3 whitespace-pre-wrap text-sm opacity-90 border border-gray-700 rounded p-3">
-            {form.content_md}
-          </pre>
-        </details>
+      {error && (
+        <div className="mb-4 text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
+          {error}
+        </div>
       )}
-    </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Title */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Title</label>
+          <input
+            type="text"
+            name="title"
+            value={form.title || ''}
+            onChange={handleChange}
+            required
+            className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
+          />
+        </div>
+
+        {/* Slug */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Slug</label>
+          <input
+            type="text"
+            name="slug"
+            value={form.slug || ''}
+            onChange={handleChange}
+            required
+            className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
+          />
+        </div>
+
+        {/* Version */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Version</label>
+          <input
+            type="text"
+            name="version"
+            value={form.version || ''}
+            onChange={handleChange}
+            placeholder="e.g. 1.0.0"
+            className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
+          />
+        </div>
+
+        {/* Group (dropdown + optional new entry) */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Group</label>
+          <select
+            value={groupSelection || form.group || ''}
+            onChange={(e) => {
+              const val = e.target.value
+              setGroupSelection(val)
+              if (val !== '__custom') {
+                setCustomGroup('')
+                setForm((prev) => ({ ...prev, group: val }))
+              }
+            }}
+            className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
+          >
+            <option value="">-- Select Group --</option>
+            {groups.map((g) => (
+              <option key={g} value={g}>
+                {g}
+              </option>
+            ))}
+            <option value="__custom">+ Create New Group</option>
+          </select>
+
+          {groupSelection === '__custom' && (
+            <input
+              type="text"
+              value={customGroup}
+              onChange={(e) => setCustomGroup(e.target.value)}
+              placeholder="Enter new group name"
+              className="mt-2 w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
+            />
+          )}
+        </div>
+
+        {/* Section */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Section</label>
+          <input
+            type="number"
+            name="section"
+            step="0.1"
+            value={form.section || ''}
+            onChange={handleChange}
+            placeholder="e.g. 7.3"
+            className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
+          />
+        </div>
+
+        {/* Summary */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Summary</label>
+          <textarea
+            name="summary"
+            value={form.summary || ''}
+            onChange={handleChange}
+            rows={3}
+            className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-slate-800"
+          />
+        </div>
+
+        {/* Markdown content */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700">
+            Content (Markdown)
+          </label>
+          <textarea
+            name="content_md"
+            value={form.content_md || ''}
+            onChange={handleChange}
+            rows={10}
+            required
+            className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 font-mono text-slate-800"
+          />
+        </div>
+
+        {/* Status */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700">Status</label>
+          <select
+            name="status"
+            value={form.status?.toLowerCase() || 'draft'}
+            onChange={(e) => setForm({ ...form, status: e.target.value })}
+            className={`mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 ${
+              form.status === 'published' ? 'text-slate-800' : 'text-gray-500'
+            }`}
+          >
+            <option value="draft">Draft</option>
+            <option value="published">Published</option>
+          </select>
+        </div>
+
+        {/* Save button */}
+        <div className="flex justify-end pt-4">
+          <button
+            type="submit"
+            disabled={saving}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg transition disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Save Standard'}
+          </button>
+        </div>
+      </form>
+    </section>
   )
 }

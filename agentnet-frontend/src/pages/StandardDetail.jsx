@@ -1,4 +1,4 @@
-// agentnet-frontend/src/pages/StandardDetail.jsx
+//agentnet-frontend/src/pages/StandardDetail.jsx
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
@@ -12,9 +12,7 @@ export default function StandardDetail() {
   useEffect(() => {
     const base = import.meta.env.VITE_API_BASE || ''
     axios.get(`${base}/api/standards/${slug}`)
-      .then(r => {
-        setDoc(r.data)
-      })
+      .then(r => setDoc(r.data))
       .catch(err => {
         console.error("Error loading standard:", err)
         setDoc(null)
@@ -31,11 +29,17 @@ export default function StandardDetail() {
   }
 
   return (
-    <article className="prose prose-invert max-w-3xl mx-auto p-6">
+    <article className="prose max-w-3xl mx-auto p-6">
       <h1>{doc.title}</h1>
-      {doc.version && (
-        <p className="text-sm text-gray-400">Version {doc.version}</p>
-      )}
+
+      {/* Version + Updated line */}
+      <div className="text-sm text-slate-500 mb-4">
+        {doc.version ? `v${doc.version}` : 'v0.x'} • updated{" "}
+        {doc.updatedAt
+          ? new Date(doc.updatedAt).toLocaleString()
+          : 'unknown'}
+      </div>
+
       <ReactMarkdown>{doc.content_md}</ReactMarkdown>
     </article>
   )

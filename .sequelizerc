@@ -1,0 +1,10 @@
+// AGENTNET-AI/.sequelizerc
+// .sequelizerc  (now lives at project root)
+const path = require('path');
+
+module.exports = {
+  'config': path.resolve(__dirname, 'agentnet-backend/src/config/config.js'),
+  'models-path': path.resolve(__dirname, 'agentnet-backend/src/models'),
+  'seeders-path': path.resolve(__dirname, 'agentnet-backend/db/seeders'),
+  'migrations-path': path.resolve(__dirname, 'agentnet-backend/db/migrations'),
+};

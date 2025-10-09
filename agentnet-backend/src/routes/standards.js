@@ -1,19 +1,22 @@
 // agentnet-backend/src/routes/standards.js
 const express = require('express')
+const semver = require('semver')
+const { Op, Sequelize } = require('sequelize')
 const { Standard } = require('../models')
 const { authenticateToken } = require('../middleware/authMiddleware')
 const { requireRole } = require('../middleware/requireRole')
 
 const router = express.Router()
 
-/**
- * ADMIN: List all standards (published + draft)
- * GET /api/standards/all
- * (MUST be defined BEFORE '/:slug' or it will 404)
- */
+/* ============================================================================
+   ADMIN: List all standards (published + draft)
+   GET /api/standards/all
+============================================================================ */
 router.get('/all', authenticateToken, requireRole('admin'), async (_req, res) => {
   try {
-    const standards = await Standard.findAll({ order: [['updatedAt', 'DESC']] })
+    const standards = await Standard.findAll({
+      order: [['group', 'ASC'], ['section', 'ASC'], ['updatedAt', 'DESC']],
+    })
     res.json(standards)
   } catch (err) {
     console.error('Error fetching all standards:', err)
@@ -21,31 +24,77 @@ router.get('/all', authenticateToken, requireRole('admin'), async (_req, res) =>
   }
 })
 
-/**
- * PUBLIC: List published, public standards
- * GET /api/standards
- */
+/* ============================================================================
+   ADMIN: List all unique groups for dropdowns
+   GET /api/standards/groups
+============================================================================ */
+router.get('/groups', authenticateToken, requireRole('admin'), async (_req, res) => {
+  try {
+    const groups = await Standard.findAll({
+      attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('group')), 'group']],
+      where: { group: { [Op.ne]: null } },
+      order: [['group', 'ASC']],
+    })
+    const groupList = groups.map(g => g.group).filter(Boolean)
+    res.json(groupList)
+  } catch (err) {
+    console.error('Error fetching groups:', err)
+    res.status(500).json({ error: 'Failed to fetch groups' })
+  }
+})
+
+/* ============================================================================
+   PUBLIC: List published standards only
+   GET /api/standards
+============================================================================ */
 router.get('/', async (_req, res) => {
   try {
     const standards = await Standard.findAll({
-      where: { status: 'published' }, // add visibility constraint here if you implemented it
-      order: [['updatedAt', 'DESC']],
+      where: { status: 'published' },
+      order: [['group', 'ASC'], ['section', 'ASC'], ['updatedAt', 'DESC']],
     })
     res.json(standards)
   } catch (err) {
-    console.error('Error fetching standards:', err)
+    console.error('Error fetching published standards:', err)
     res.status(500).json({ error: 'Failed to fetch standards' })
   }
 })
 
-/**
- * ADMIN: Create or update a standard
- * POST /api/standards
- * Body: { slug, title, description, content_md, status, ... }
- */
+/* ============================================================================
+   ADMIN: Fetch specific standard by slug (any status)
+   GET /api/standards/admin/:slug
+============================================================================ */
+router.get('/admin/:slug', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { slug } = req.params
+    const standard = await Standard.findOne({ where: { slug } })
+    if (!standard) return res.status(404).json({ error: 'Standard not found' })
+    res.json(standard)
+  } catch (err) {
+    console.error('Error fetching standard by slug (admin):', err)
+    res.status(500).json({ error: 'Failed to fetch standard' })
+  }
+})
+
+/* ============================================================================
+   ADMIN: Create or update (upsert) a standard
+   POST /api/standards
+============================================================================ */
 router.post('/', authenticateToken, requireRole('admin'), async (req, res) => {
   try {
-    const { slug, title, description, content_md, status, visibility, requiredLicense } = req.body
+    const {
+      slug,
+      title,
+      description,
+      content_md,
+      status,
+      visibility,
+      requiredLicense,
+      version,
+      group,
+      section,
+    } = req.body
+
     if (!slug || !title || !content_md) {
       return res.status(400).json({ error: 'Missing required fields' })
     }
@@ -56,9 +105,11 @@ router.post('/', authenticateToken, requireRole('admin'), async (req, res) => {
       description: description || '',
       content_md,
       status: status || 'published',
-      // include these only if your model/migration has them:
+      version: version || '1.0.0',
       visibility: visibility || undefined,
       requiredLicense: requiredLicense || null,
+      group: group || 'AgentNet Standards',
+      section: section || null,
     })
 
     res.json({ ok: true, created, doc })
@@ -68,27 +119,75 @@ router.post('/', authenticateToken, requireRole('admin'), async (req, res) => {
   }
 })
 
-/**
- * ADMIN: Delete a standard by slug
- * DELETE /api/standards/:slug
- * (Keep this ABOVE the generic GET '/:slug' to avoid accidental matches)
- */
+/* ============================================================================
+   ADMIN: Update existing standard by slug (semantic version aware)
+   PUT /api/standards/:slug
+============================================================================ */
+router.put('/:slug', authenticateToken, requireRole('admin'), async (req, res) => {
+  try {
+    const { slug } = req.params
+    const standard = await Standard.findOne({ where: { slug } })
+    if (!standard) return res.status(404).json({ error: 'Standard not found' })
+
+    const { updateType, ...fields } = req.body
+
+    // ✅ Protect slug from being overwritten
+    if (fields.slug && fields.slug !== slug) {
+      delete fields.slug
+    }
+
+    // ✅ Validate numeric section
+    if (fields.section && isNaN(parseFloat(fields.section))) {
+      return res.status(400).json({ error: 'Section must be a valid number' })
+    }
+
+    // ✅ Whitelist allowed updatable fields
+    const allowed = ['title', 'version', 'summary', 'content_md', 'group', 'section', 'status']
+    const updates = {}
+    for (const key of allowed) {
+      if (Object.hasOwn(fields, key)) updates[key] = fields[key]
+    }
+
+    // Normalize status
+    if (updates.status) updates.status = updates.status.toLowerCase().trim()
+
+    // Apply safe updates
+    Object.assign(standard, updates)
+
+    // Semantic version bump if requested
+    if (updateType && ['major', 'minor', 'patch'].includes(updateType)) {
+      const currentVersion = standard.version || '1.0.0'
+      const newVersion = semver.inc(currentVersion, updateType)
+      if (newVersion) standard.version = newVersion
+    }
+
+    await standard.save()
+    res.json({ ok: true, updated: true, version: standard.version })
+  } catch (err) {
+    console.error('Error updating standard by slug:', err)
+    res.status(500).json({ error: 'Failed to update standard' })
+  }
+})
+
+/* ============================================================================
+   ADMIN: Delete a standard by slug
+   DELETE /api/standards/:slug
+============================================================================ */
 router.delete('/:slug', authenticateToken, requireRole('admin'), async (req, res) => {
   try {
     const deletedCount = await Standard.destroy({ where: { slug: req.params.slug } })
     if (deletedCount === 0) return res.status(404).json({ error: 'Standard not found' })
     res.json({ ok: true, deleted: deletedCount })
   } catch (err) {
-    console.error('Error deleting standard:', err)
+    console.error('Error deleting standard by slug:', err)
     res.status(500).json({ error: 'Failed to delete standard' })
   }
 })
 
-/**
- * PUBLIC: Get a specific published standard by slug
- * GET /api/standards/:slug
- * (Place this LAST so it doesn’t swallow '/all' or other specific routes)
- */
+/* ============================================================================
+   PUBLIC: Get published standard by slug
+   GET /api/standards/:slug
+============================================================================ */
 router.get('/:slug', async (req, res) => {
   try {
     const standard = await Standard.findOne({
@@ -97,7 +196,7 @@ router.get('/:slug', async (req, res) => {
     if (!standard) return res.status(404).json({ error: 'Standard not found' })
     res.json(standard)
   } catch (err) {
-    console.error('Error fetching standard:', err)
+    console.error('Error fetching standard (public):', err)
     res.status(500).json({ error: 'Failed to fetch standard' })
   }
 })

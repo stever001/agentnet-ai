@@ -27,39 +27,56 @@ export default function Standards() {
 
   if (loading) {
     return (
-      <section>
-        <h1 className="text-3xl font-bold mb-4">Standards</h1>
-        <p className="text-muted">Loading standards…</p>
+      <section className="max-w-5xl mx-auto p-6">
+        <h1 className="text-3xl font-bold mb-4 text-slate-900">Standards</h1>
+        <p className="text-slate-500">Loading standards…</p>
       </section>
     )
   }
 
   return (
-    <section>
-      <h1 className="text-3xl font-bold mb-4">Standards</h1>
-      <p className="text-muted mb-6">
-        Living standards for agent registration, capsules, and more.
-      </p>
+    <section className="max-w-5xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6 text-slate-900">
+        AgentNet Standards
+      </h1>
 
-      <ul className="grid gap-4">
+      {/* optional tagline — commented out for now */}
+      {/*
+      <p className="text-slate-600 mb-6">
+        Living standards for agent registration, capsules, and interoperability.
+      </p>
+      */}
+
+      <ul className="grid gap-5">
         {items.length === 0 && (
-          <li className="text-muted">No standards published yet.</li>
+          <li className="text-slate-500">No standards published yet.</li>
         )}
+
         {items.map(it => (
           <li
             key={it.id}
-            className="rounded-xl border border-white/10 p-4 hover:bg-white/5 transition"
+            className="rounded-xl border border-slate-200 p-5 hover:bg-slate-50 transition"
           >
             <Link
               to={`/standards/${it.slug}`}
-              className="text-lg font-semibold underline"
+              className="text-lg font-semibold underline text-slate-900 hover:text-blue-700"
             >
               {it.title}
             </Link>
-            <div className="text-xs text-muted mt-1">
-              v{it.version} • updated {new Date(it.updatedAt).toLocaleString()}
+
+            {/* Version + Updated line */}
+            <div className="text-xs text-slate-500 mt-1">
+              {it.version ? `v${it.version}` : 'v0.x'} • updated{" "}
+              {it.updatedAt
+                ? new Date(it.updatedAt).toLocaleString()
+                : 'unknown'}
             </div>
-            {it.summary && <p className="mt-2">{it.summary}</p>}
+
+            {it.summary && (
+              <p className="mt-2 text-slate-700 leading-relaxed">
+                {it.summary}
+              </p>
+            )}
           </li>
         ))}
       </ul>
