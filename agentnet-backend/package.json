@@ -6,14 +6,17 @@
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "seed": "node src/seed.js",
+    "export-docx": "node scripts/exportStandardsToDocx.js",
     "db:migrate": "node -r dotenv/config ./node_modules/.bin/sequelize-cli db:migrate"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "html-to-docx": "^1.8.0",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.10.0",
+    "marked": "^16.4.0",
+    "mysql2": "^3.15.2",
     "semver": "^7.7.2",
     "sequelize": "^6.37.3"
   },

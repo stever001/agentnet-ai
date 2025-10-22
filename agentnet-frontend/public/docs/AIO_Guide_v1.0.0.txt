@@ -1,0 +1,1065 @@
+AGENTNET
+{
+  "Internet": "Humans",
+  "AgentNet": "Machines"
+}
+
+AgentNet AIO Guide v1.0.0
+Version 1.0.0  |  October 2025  |  Author: Steven W. Rouse
+© 2025 AgentNet — All Rights Reserved.
+
+------------------------------------------------------------
+CONCEPT STATEMENT
+------------------------------------------------------------
+"If the Internet was built for humans, AgentNet is built for machines."
+
+{
+  "Internet": "Humans",
+  "AgentNet": "Machines"
+}
+
+The traditional Internet was designed for human interpretation—HTML pages, visuals, and language optimized for reading and engagement. AgentNet establishes a machine-native knowledge layer where information is expressed as structured, verifiable data capsules optimized for traversal, inference, and trust by autonomous AI agents. The contrast is foundational: Internet : Humans ; AgentNet : Machines.
+
+------------------------------------------------------------
+PREFACE AND EXECUTIVE OVERVIEW
+------------------------------------------------------------
+Purpose
+This guide is the canonical, comprehensive reference for Agent Intelligence Optimization (AIO). It explains how to publish machine-interpretable, verifiable knowledge so AI agents can discover, trust, and traverse your content across the AgentNet ecosystem.
+
+Audience
+• Developers and data engineers implementing JSON-LD capsules and manifests
+• SEO specialists evolving toward schema-first publishing for agents
+• Node owners/operators responsible for trust, keys, and uptime
+• Resolver administrators and federation participants who maintain network integrity
+
+Scope
+You will learn: (1) the conceptual shift from SEO to AIO, (2) the core AgentNet components—Nodes, Capsules, Resolvers, Federation, (3) schema architecture and JSON-LD modeling, (4) manifests, sitemaps, and capsule feeds, (5) trust and confidence scoring, (6) discovery and traversal, (7) data quality, localization, and deduplication, (8) analytics and Node health, (9) coexistence with traditional SEO, (10) compliance and federation operations, (11) toolchains and CI/CD integration, and (12) patterns, anti-patterns, and checklists. Appendices provide templates, rules, examples, a comprehensive glossary, branding guidance, and a diagram index.
+
+Document Conventions
+• Monospaced blocks indicate JSON or code.
+• Normative terms: MUST, MUST NOT, REQUIRED, SHALL, SHOULD, SHOULD NOT, RECOMMENDED, MAY, OPTIONAL (as per RFC 2119/8174 intent).
+• URIs shown as agentnet://… are machine canonical identifiers; https://… are human canonical pages.
+• All dates/times are ISO-8601 UTC unless otherwise noted.
+
+[DIAGRAM PLACEHOLDER — Document Architecture Overview]
+
+------------------------------------------------------------
+1  FROM SEO TO AIO: A PARADIGM SHIFT
+------------------------------------------------------------
+
+1.1  Introduction
+Search engine optimization (SEO) evolved to help humans find pages. Agent Intelligence Optimization (AIO) exists to help machines interpret and trust structured data. SEO emphasizes ranking signals that correlate with human behavior; AIO emphasizes explicit semantics, provenance, and verifiable signatures. The primary object changes from a page to a capsule; the primary outcome changes from a rank to a confidence score.
+
+1.2  The Human Web vs The Machine Web
+Dimension        SEO (Human Web)                        AIO (Machine Web)
+---------------------------------------------------------------------------
+Consumer         Human reader                           Autonomous agent
+Primary Object   Web page                               Capsule (JSON-LD)
+Signal Source    Clicks, links, dwell time              Schema fidelity, signatures, provenance
+Evaluation       Heuristic, behavior-driven ranking     Deterministic confidence scoring + federation agreement
+Governance       Proprietary algorithms                 AgentNet Standards (ANS) + federated resolvers
+Outcome          Visibility to people                   Interpretability and trust for machines
+
+[DIAGRAM PLACEHOLDER — SEO→AIO Transition Timeline]
+
+1.3  From Ranking to Trust
+Traditional search ranks pages by popularity proxies: backlinks, click patterns, and content heuristics. AgentNet replaces popularity with verifiable trust. Confidence is computed from schema validity, signature integrity, provenance depth, federation consensus, freshness, and velocity. The outcome is predictable and auditable.
+
+Mapping of Signals
+SEO Signal        AIO Equivalent                  Basis
+-------------------------------------------------------------------
+Backlinks         Linked Nodes / Relations        Resolvable URIs, typed relations, signature chains
+Authority         Node Verification               Registered Node, keys, owner signature
+Freshness         Manifest Versioning             Timestamped manifests and bundles
+Relevance         Schema Alignment                Correct @context/@type and typed fields
+Engagement        Velocity                        Agent traversal frequency and recency
+
+1.4  Economic and Operational Parallel
+SEO economy centered on domain authority, content cadence, and attention arbitrage (ads). AIO economy centers on verified Node ownership, capsule integrity, and resolvable graph connectivity. Value accrues to publishers who maintain high confidence and low error rates; resolvers reward predictability and integrity over persuasion.
+
+SEO → AIO Parallels
+SEO Construct        AIO Construct                     Operational Lever
+---------------------------------------------------------------------------
+Domains              Nodes                              Registration + keys
+Link building        Trust relations                    Stable @id + signatures
+Search Console       Node Console                       Confidence + telemetry
+Sitemaps             agentnet-sitemap.json              Capsule enumeration
+Robots.txt           agentnet-manifest.json             Access, ownership, update policy
+
+[DIAGRAM PLACEHOLDER — Node–Capsule–Resolver Relationship]
+
+1.5  Stakeholder Roles
+Marketer → Data Publisher: curates facts, not slogans; aligns messaging with ground-truth schemas.
+Developer → Schema Architect: models entities, relations, and contexts; enforces type safety and versioning.
+Sysadmin → Node Operator: serves manifests/capsules reliably; rotates keys; monitors telemetry.
+Search Engine → Resolver: verifies, registers, and federates capsules; computes confidence; exposes APIs.
+
+1.6  The AIO Lifecycle
+1) Schema Publication—author JSON-LD capsules with stable @id, correct @type, and agentnet:owner.
+2) Discovery & Harvest—ANT-Capsulizer finds manifests/sitemaps and ingests declared capsules.
+3) Validation—schema checks, signature verification, normalization, and provenance review.
+4) Registration—accepted capsules become part of the resolver’s canonical graph.
+5) Federation—trusted resolvers exchange trust bundles and align on confidence and state.
+6) Traversal—agents query, fetch, and reason over capsules across the federated graph.
+
+[DIAGRAM PLACEHOLDER — Capsule Lifecycle Overview]
+
+1.7  Benefits of Transition
+Transparency—confidence drivers are inspectable.
+Predictability—publishers can raise scores by fixing concrete issues.
+Interoperability—federation makes verified data portable and durable.
+Efficiency—less crawl duplication; fewer heuristics; direct semantics.
+Economic Alignment—rewards go to accurate, current, verified data.
+
+1.8  Summary
+AIO doesn’t compete with SEO for human attention; it supersedes it for machine understanding. Success depends on modeling your domain as explicit, versioned, and verifiable knowledge capsules.
+
+========== END PART 1 / CONTINUE BELOW ==========
+------------------------------------------------------------
+2  CORE CONCEPTS
+------------------------------------------------------------
+AgentNet operationalizes a graph of verifiable knowledge. Four pillars underpin the system: Nodes (ownership), Capsules (facts), Resolvers (verification), and Federation (network consistency).
+
+2.1  Nodes
+A Node is a registered digital entity (organization, brand, project, or site) that owns and publishes capsules. Nodes MUST provide a manifest accessible via HTTPS that identifies the Node, its signing keys, and capsule inventory.
+
+Node Responsibilities
+• Maintain a stable agentnet://node/... identifier
+• Host agentnet-manifest.json (and MAY host agentnet-sitemap.json and feeds)
+• Sign manifests and (optionally) capsules
+• Keep timestamps fresh and rotate keys according to policy
+• Monitor telemetry and correct issues that reduce confidence
+
+2.2  Capsules
+A Capsule is a self-contained, typed JSON-LD record representing a unit of knowledge (Product, Organization, Event, Article, Person, Service, Place, Dataset, etc.). It MUST include @context, @type, @id, and agentnet:owner. It SHOULD include a signature and versioning metadata.
+
+Example Capsule — Product
+{
+  "@context": "https://agentnet.ai/context",
+  "@type": "agentnet:Product",
+  "@id": "agentnet://node/example-com/product/1234",
+  "name": "Handcrafted Walnut Bowl",
+  "description": "An artisan bowl made from sustainably harvested walnut.",
+  "sku": "WAL-1234",
+  "brand": "Artifex",
+  "offers": { "@type": "Offer", "price": "120.00", "priceCurrency": "USD" },
+  "agentnet:owner": "agentnet://node/example-com",
+  "agentnet:version": "1.0.1",
+  "agentnet:issuedAt": "2025-10-20T00:00:00Z"
+}
+
+2.3  Resolvers
+Resolvers are authoritative registries that (a) verify Node ownership and capsule signatures, (b) compute confidence scores, and (c) federate verified state with peers.
+
+Resolver Duties
+• Verify manifests, keys, and signatures
+• Validate schema compliance and normalization
+• Register capsules into the canonical graph
+• Compute and expose confidence metrics
+• Exchange trust bundles with federated peers
+
+2.4  Federation
+Federation is the agreement layer among resolvers. It provides redundancy, jurisdictional diversity, and convergence toward consistent confidence assignments.
+
+[DIAGRAM PLACEHOLDER — Federation Topology Map]
+
+2.5  Confidence Model (Overview)
+Primary inputs: schema fidelity, signature integrity, provenance depth, federation agreement, freshness, velocity. Outputs: capsuleConfidence (0–100), nodeConfidence, and an explainability vector of factor scores and penalties.
+
+2.6  Provenance Chain
+Capsules SHOULD carry lineage metadata: issuedBy, issuedAt, checksum, previousVersion, and optional auditHash over sensitive fields. Verifiers MAY fetch historical versions to validate the chain.
+
+------------------------------------------------------------
+3  SCHEMA ARCHITECTURE & DESIGN
+------------------------------------------------------------
+3.1  JSON-LD Foundations
+Every capsule MUST include:
+• @context — a resolvable JSON-LD context URL
+• @type — a type from agentnet:* or compatible vocabularies
+• @id — a stable, globally unique URI
+• agentnet:owner — the Node’s machine identifier
+
+Baseline Organization Capsule
+{
+  "@context": "https://agentnet.ai/context",
+  "@type": "agentnet:Organization",
+  "@id": "agentnet://node/example-com/org",
+  "name": "Example Industries LLC",
+  "url": "https://example.com",
+  "agentnet:owner": "agentnet://node/example-com"
+}
+
+3.2  Vocabulary Strategy
+Use agentnet:* classes for trust and federation metadata; use schema.org (schema:Product, schema:Event, etc.) for domain semantics. Prefix external terms (schema:, ext:). Avoid mixing conflicting types in a single capsule. Prefer explicit enums over free-text.
+
+[DIAGRAM PLACEHOLDER — Capsule Anatomy Overview]
+
+3.3  Identifiers & Canonicality
+Capsules MUST use immutable @id. When data changes materially, create a new version property (agentnet:version) but keep the same @id if the identity remains the same (e.g., a product). If identity changes (a new product), mint a new @id. Dual canonicality is RECOMMENDED:
+• Human canonical: https://…
+• Machine canonical: agentnet://…
+
+3.4  Normalization
+Apply consistent norms:
+• Dates: ISO-8601 with Z (UTC)
+• Currency: ISO 4217 (USD, EUR, JPY)
+• Locale: BCP-47 (en-US, fr-FR)
+• Units: SI (kg, m, L) and precise decimals
+• Booleans: true/false (no “yes”/“no” strings)
+
+3.5  Extending Schemas
+Publish custom contexts at stable URLs and document property semantics. Namespaces SHOULD avoid collisions (e.g., https://example.com/contexts/catalog/v1). Add agentnet:schemaVersion to track compatibility with ANS releases.
+
+3.6  Worked Examples (Selected)
+
+A) Event
+{
+  "@context": "https://agentnet.ai/context",
+  "@type": "agentnet:Event",
+  "@id": "agentnet://node/example-com/event/ai-summit-2026",
+  "name": "AI Summit 2026",
+  "startDate": "2026-05-14T09:00:00Z",
+  "endDate": "2026-05-14T17:00:00Z",
+  "location": { "@type": "Place", "name": "Tech Center Conference Hall" },
+  "inLanguage": "en-US",
+  "agentnet:owner": "agentnet://node/example-com",
+  "agentnet:version": "1.0.0"
+}
+
+B) Article
+{
+  "@context": "https://agentnet.ai/context",
+  "@type": "agentnet:Article",
+  "@id": "agentnet://node/example-com/article/aio-intro",
+  "headline": "Understanding Agent Intelligence Optimization",
+  "datePublished": "2025-10-20",
+  "author": "Steven W. Rouse",
+  "inLanguage": "en-US",
+  "agentnet:owner": "agentnet://node/example-com",
+  "agentnet:version": "1.0.0"
+}
+
+C) Person
+{
+  "@context": "https://agentnet.ai/context",
+  "@type": "agentnet:Person",
+  "@id": "agentnet://node/example-com/person/steven-rouse",
+  "name": "Steven W. Rouse",
+  "jobTitle": "Founder",
+  "affiliation": "agentnet://node/example-com/org",
+  "agentnet:owner": "agentnet://node/example-com",
+  "agentnet:version": "1.0.0"
+}
+
+------------------------------------------------------------
+4  MANIFESTS, SITEMAPS, AND FEEDS
+------------------------------------------------------------
+4.1  agentnet-manifest.json (REQUIRED)
+Purpose: declare Node identity, keys, and capsule inventory for resolvers. Location SHOULD be a well-known HTTPS path.
+
+Manifest (Minimal)
+{
+  "agentnet:node": "agentnet://node/example-com",
+  "agentnet:manifestVersion": "1.0.0",
+  "agentnet:owner": "did:key:z6MkEXAMPLE",
+  "agentnet:ownerSignature": "BASE64_SIGNATURE",
+  "agentnet:capsules": [
+    "https://example.com/data/org.json",
+    "https://example.com/data/product-1234.json"
+  ],
+  "agentnet:updatedAt": "2025-10-20T00:00:00Z"
+}
+
+[DIAGRAM PLACEHOLDER — Manifest Validation Workflow]
+
+4.2  agentnet-sitemap.json (OPTIONAL)
+Enumerate capsule endpoints with change frequency and timestamps for targeted harvesting.
+
+Sitemap
+{
+  "agentnet:node": "agentnet://node/example-com",
+  "agentnet:sitemapVersion": "1.0.0",
+  "entries": [
+    {
+      "url": "https://example.com/data/product-1234.json",
+      "changefreq": "weekly",
+      "lastModified": "2025-10-01T00:00:00Z"
+    }
+  ]
+}
+
+4.3  Capsule Feeds (OPTIONAL)
+Large catalogs SHOULD provide paginated feeds with ETag/If-Modified-Since.
+
+Feed (Page 2)
+{
+  "agentnet:feedVersion": "1.0.0",
+  "agentnet:page": 2,
+  "agentnet:nextPage": 3,
+  "agentnet:capsules": [
+    "https://example.com/data/product-234.json",
+    "https://example.com/data/product-235.json"
+  ],
+  "agentnet:generatedAt": "2025-10-20T00:00:00Z"
+}
+
+4.4  Publishing Cycle (RECOMMENDED)
+Validate → Sign → Publish → Notify Resolver → Monitor telemetry → Iterate.
+
+4.5  Operational Notes
+• Use HTTPS with modern TLS; enable HTTP/2 where possible.
+• Serve JSON with correct Content-Type (application/ld+json).
+• Apply Cache-Control and ETag to reduce re-harvest load.
+• Keep manifests compact and up-to-date; stale manifests reduce confidence.
+
+========== END PART 2 / CONTINUE BELOW ==========
+------------------------------------------------------------
+5  TRUST & CONFIDENCE
+------------------------------------------------------------
+AgentNet measures capsule trust explicitly and explains it quantitatively. Confidence is reproducible: two compliant resolvers, given identical inputs and policies, SHOULD converge on similar scores.
+
+[DIAGRAM PLACEHOLDER — Trust Score Computation Model]
+
+5.1  Digital Signatures (RECOMMENDED)
+Capsules and manifests MAY include agentnet:signature with an algorithm label and Base64 signature. Resolvers verify using the Node’s registered public key.
+
+Signature Snippet
+{
+  "agentnet:signatureAlgorithm": "ed25519",
+  "agentnet:signature": "BASE64_ENCODED_VALUE",
+  "agentnet:issuedAt": "2025-10-20T00:00:00Z"
+}
+
+5.2  Confidence Inputs (NORMATIVE MODEL)
+Factor               Typical Weight   Description
+---------------------------------------------------------------------------
+Schema Fidelity      0.30             Required fields present/typed, no conflicts
+Signature Integrity  0.25             Cryptographic verification success
+Provenance Depth     0.15             Rich lineage, version history, checksums
+Federation Agreement 0.15             Cross-resolver consensus
+Freshness            0.10             Recency of last valid update
+Velocity             0.05             Agent interactions over window
+
+5.3  Confidence Computation
+Confidence = 100 × Σ(weight × factorScore)
+where factorScore ∈ [0,1]. Thresholds are policy-dependent; commonly, ≥80 “Trusted,” 60–79 “Verified,” <60 “Provisional.”
+
+Confidence Output (Example)
+{
+  "agentnet:capsuleConfidence": 87,
+  "agentnet:confidenceFactors": {
+    "schema": 1.0,
+    "signature": 0.9,
+    "provenance": 0.7,
+    "federation": 0.8,
+    "freshness": 1.0,
+    "velocity": 0.6
+  },
+  "agentnet:lastEvaluated": "2025-10-20T00:00:00Z"
+}
+
+5.4  Confidence Lifecycle
+• Assign initial score at ingestion
+• Recompute upon manifest/capsule updates or federation deltas
+• Apply decay over time without activity (policy-based)
+• Boost confidence with consistent telemetry and cross-resolver agreement
+
+5.5  Explainability and Remediation
+Resolvers SHOULD expose reasons[] detailing penalties and suggested remediations (e.g., “Missing inLanguage; add BCP-47 tag”).
+
+------------------------------------------------------------
+6  DISCOVERY & TRAVERSAL
+------------------------------------------------------------
+Discovery determines which resources are harvested; traversal determines how agents move through the knowledge graph.
+
+[DIAGRAM PLACEHOLDER — Capsulizer Traversal Flow]
+
+6.1  Discovery
+• Read manifests and sitemaps
+• Fetch declared capsules (respecting crawl delay and HTTP 429 backoff)
+• Validate schema and signatures
+• Register acceptable capsules; reject or penalize others with clear reasons
+
+6.2  Traversal Semantics
+Capsules SHOULD link to related capsules with explicit relations (agentnet:relatedTo, agentnet:hasPart, agentnet:memberOf, agentnet:offers).
+
+Link Example
+{
+  "@id": "agentnet://node/example-com/product/1234",
+  "agentnet:relatedTo": "agentnet://node/example-com/article/5678",
+  "agentnet:hasPart": [
+    "agentnet://node/example-com/component/1",
+    "agentnet://node/example-com/component/2"
+  ]
+}
+
+6.3  Rate Limiting & Backoff
+Include agentnet:crawlDelay in manifest when necessary. Capsulizer MUST respect 429 with exponential backoff. Prefer deterministic schedules over reactive blocking.
+
+6.4  Caching and Conditional Requests
+Use ETag and Last-Modified to minimize bandwidth. Clients SHOULD use If-None-Match/If-Modified-Since for revalidation.
+
+6.5  Robustness
+Servers SHOULD provide graceful degradation: partial feeds, pagination, and retriable errors with Retry-After headers when applicable.
+
+------------------------------------------------------------
+7  DATA QUALITY, LOCALIZATION & DEDUPLICATION
+------------------------------------------------------------
+7.1  Validation Rules (NORMATIVE)
+Required: @context, @type, @id, agentnet:owner
+Recommended: agentnet:signature, agentnet:version, inLanguage, region, checksum
+
+7.2  Localization (RECOMMENDED)
+Declare inLanguage (BCP-47) and region when content is localized. Publish alternates with agentnet:alternateLanguage pointing to sibling capsules.
+
+Article (Localized)
+{
+  "@context": "https://agentnet.ai/context",
+  "@type": "agentnet:Article",
+  "@id": "agentnet://node/example-com/article/aio-intro",
+  "headline": "Understanding Agent Intelligence Optimization",
+  "datePublished": "2025-10-20",
+  "author": "Steven W. Rouse",
+  "inLanguage": "en-US",
+  "agentnet:owner": "agentnet://node/example-com",
+  "agentnet:alternateLanguage": "agentnet://node/example-com/article/aio-intro-es"
+}
+
+7.3  Deduplication
+Resolvers detect duplicates via @id, checksums, and structural similarity. Duplicate or conflicting capsules reduce confidence until reconciled.
+
+7.4  Error Taxonomy
+Level     Description                                Action
+----------------------------------------------------------------
+BLOCKER   Missing required fields, bad signature     Reject
+WARNING   Non-critical schema mismatch               Ingest w/ penalty
+INFO      Advisory notes                             No penalty
+
+[DIAGRAM PLACEHOLDER — Data Quality Funnel]
+
+------------------------------------------------------------
+8  ANALYTICS AND NODE HEALTH
+------------------------------------------------------------
+The Node Console provides visibility into capsule volume, confidence distribution, federation state, and velocity. Operators SHOULD use telemetry to drive continuous improvement.
+
+8.1  Metrics
+• Capsule Count
+• Average Confidence and distribution percentiles
+• Velocity (per day/week)
+• Federation Agreement (peers in consensus)
+• Error Rates (BLOCKER/WARNING)
+
+8.2  Telemetry Feed (OPTIONAL)
+{
+  "agentnet:node": "agentnet://node/example-com",
+  "agentnet:telemetryVersion": "1.0.0",
+  "agentnet:metrics": {
+    "capsuleCount": 235,
+    "avgConfidence": 92,
+    "velocity": 71
+  },
+  "agentnet:timestamp": "2025-10-20T00:00:00Z"
+}
+
+8.3  Optimization Loop
+1) Inspect telemetry
+2) Identify low-confidence capsules
+3) Fix schema/signature
+4) Republish
+5) Verify resolver acceptance
+6) Track score deltas
+
+[DIAGRAM PLACEHOLDER — Telemetry Feedback Loop]
+
+========== END PART 3 / CONTINUE BELOW ==========
+------------------------------------------------------------
+9  COEXISTENCE WITH TRADITIONAL SEO
+------------------------------------------------------------
+AIO and SEO complement each other. Keep human pages for people and publish capsules for machines. Maintain parity of facts across both layers.
+
+[DIAGRAM PLACEHOLDER — Human + Machine Web Coexistence]
+
+9.1  Dual Publishing
+Layer   Format                  Purpose
+------------------------------------------------
+Human   HTML + schema.org       Readability + search ranking
+Machine JSON-LD capsules        Trustable knowledge for agents
+
+Guidelines
+• Keep titles, prices, dates, and facts consistent across HTML and capsules
+• Link each page to its corresponding capsule(s) via rel or JSON-LD pointers
+• Use the same canonical identity across forms
+
+9.2  Migration Patterns
+1) Start with Organization + Product
+2) Add Event, Article, Person as needed
+3) Introduce manifest + signatures
+4) Add feeds and telemetry
+5) Register Node and confirm resolver ingestion
+
+9.3  Common Pitfalls (and Fixes)
+• Hidden JSON-LD behind JS → serve static JSON-LD
+• Reused IDs → mint stable @id and version field
+• Missing signatures → sign manifests and priority capsules
+• Stale timestamps → refresh agentnet:updatedAt policies
+
+------------------------------------------------------------
+10  COMPLIANCE AND FEDERATION OPERATIONS
+------------------------------------------------------------
+Compliance ensures cross-resolver consistency. Federation spreads trust while resisting localized failures or policy variance.
+
+[DIAGRAM PLACEHOLDER — Federation Topology Map]
+
+10.1  Trust Bundles
+Bundles are signed delta packages that communicate verified changes and model updates.
+
+Trust Bundle (Example)
+{
+  "@context": "https://agentnet.ai/context",
+  "@type": "agentnet:TrustBundle",
+  "agentnet:issuer": "agentnet://resolver/resolver-001",
+  "agentnet:issuedAt": "2025-10-20T00:00:00Z",
+  "agentnet:events": [
+    {
+      "agentnet:eventType": "NodeRegistration",
+      "agentnet:node": "agentnet://node/example-com",
+      "agentnet:checksum": "SHA256:ABC…"
+    }
+  ],
+  "agentnet:signature": "BASE64_SIGNATURE"
+}
+
+10.2  Federation Sync Process
+• CRR issues bundle → peers verify signatures and checksums → peers update local state → confidence re-evaluation → audit logging
+
+10.3  Dispute Resolution
+Prefer objective signals: newest valid signature, majority agreement, immutable lineage (previousVersion chain). Manual overrides MUST produce an auditable record.
+
+------------------------------------------------------------
+11  AIO TOOLBOX AND REFERENCE IMPLEMENTATIONS
+------------------------------------------------------------
+Tools accelerate compliance: validators, linters, analyzers, CLIs, and SDKs.
+
+[DIAGRAM PLACEHOLDER — AIO CI/CD Flow Diagram]
+
+11.1  Core Tools
+• Capsule Validator — schema/signature validation, SARIF/JSON output
+• Manifest Linter — completeness, timestamps, links
+• Confidence Analyzer — factor weights, reasons[]
+• CLI Publisher — publish and notify resolver
+• Telemetry Collector — push Node health metrics
+
+11.2  CI/CD Integration
+steps:
+  - run: agentnet-validate capsules/**/*.json --format sarif --fail-on=BLOCKER
+  - run: agentnet-sign manifest.json --key $SIGNING_KEY
+  - run: agentnet-publish manifest.json
+  - run: agentnet-telemetry push telemetry.json
+
+11.3  Reference Implementations
+• Node SDK (JS/TS) — manifest build/sign; capsule helpers
+• Resolver API — registration, confidence, and search endpoints
+• Capsulizer Service — discovery/fetch/validate pipeline
+
+------------------------------------------------------------
+12  PATTERNS, ANTI-PATTERNS & CHECKLISTS
+------------------------------------------------------------
+12.1  Recommended Patterns
+• Single source of truth data model feeding both HTML and capsules
+• Immutable IDs + explicit agentnet:version
+• Signed manifests and high-value capsules
+• Paginated feeds with ETags and backoff hints
+• Localization via inLanguage + alternate capsules
+• Clear relations (hasPart, relatedTo, offers)
+
+12.2  Anti-Patterns
+Anti-Pattern                          Consequence
+---------------------------------------------------------------
+Hidden JSON-LD behind JS              Ignored by Capsulizer
+Reused IDs for new objects            Collisions and trust loss
+Conflicting contexts/types            Validation penalties
+Unsigned/undated data                 Lower confidence and visibility
+Stale manifests                       Confidence decay
+
+12.3  Readiness Checklist
+Before registration, confirm:
+☑ Node registered, keys generated and stored securely
+☑ Manifest reachable, valid, and signed
+☑ Capsules pass validation with 0 BLOCKERs
+☑ Confidence ≥ 80 for priority capsules
+☑ Telemetry working; federation sync OK
+☑ Incident runbook for key rotation and outage scenarios
+
+[DIAGRAM PLACEHOLDER — Readiness Checklist Layout]
+
+========== END PART 4 / CONTINUE BELOW ==========
+------------------------------------------------------------
+APPENDIX A — MANIFEST & SITEMAP TEMPLATES
+------------------------------------------------------------
+A.1  Minimal Manifest
+{
+  "agentnet:node": "agentnet://node/example-com",
+  "agentnet:owner": "did:key:z6MkEXAMPLE",
+  "agentnet:ownerSignature": "BASE64_SIGNATURE",
+  "agentnet:capsules": [
+    "https://example.com/data/org.json"
+  ],
+  "agentnet:updatedAt": "2025-10-20T00:00:00Z"
+}
+
+A.2  Expanded Manifest (with policy)
+{
+  "agentnet:node": "agentnet://node/example-com",
+  "agentnet:owner": "did:key:z6MkEXAMPLE",
+  "agentnet:ownerSignature": "BASE64_SIGNATURE",
+  "agentnet:capsules": [
+    "https://example.com/data/org.json",
+    "https://example.com/data/product-*.json"
+  ],
+  "agentnet:crawlDelay": 1.5,
+  "agentnet:contact": "mailto:ops@example.com",
+  "agentnet:updatedAt": "2025-10-20T00:00:00Z"
+}
+
+A.3  Sitemap Template
+{
+  "agentnet:node": "agentnet://node/example-com",
+  "entries": [
+    {
+      "url": "https://example.com/data/product-123.json",
+      "changefreq": "weekly",
+      "lastModified": "2025-10-18T00:00:00Z"
+    }
+  ]
+}
+
+[DIAGRAM PLACEHOLDER — Manifest and Sitemap Relationship]
+
+------------------------------------------------------------
+APPENDIX B — ERROR CODES
+------------------------------------------------------------
+Code     Category     Meaning                                   Action
+---------------------------------------------------------------------------
+AIO-001  Validation   Missing required field                    BLOCKER
+AIO-002  Validation   Invalid enum                              BLOCKER
+AIO-003  Trust        Signature verification failed             BLOCKER
+AIO-004  Provenance   Stale timestamp                           WARNING
+AIO-005  Integrity    Duplicate ID collision                    BLOCKER
+AIO-006  Federation   Out-of-sync resolver state                WARNING
+AIO-007  Network      Manifest unreachable                      BLOCKER
+AIO-008  Security     Unregistered signer                       BLOCKER
+AIO-009  Schema       Unrecognized context                      WARNING
+AIO-010  Internal     Resolver processing error                 INFO
+
+------------------------------------------------------------
+APPENDIX C — SAMPLE CI PIPELINE YAML
+------------------------------------------------------------
+steps:
+  - name: Validate capsules
+    run: agentnet-validate capsules/**/*.json --format sarif --fail-on=BLOCKER
+  - name: Sign manifest
+    run: agentnet-sign manifest.json --key $SIGNING_KEY
+  - name: Publish manifest
+    run: agentnet-publish manifest.json
+  - name: Push telemetry
+    run: agentnet-telemetry push telemetry.json
+
+[DIAGRAM PLACEHOLDER — CI/CD Pipeline Flow]
+
+------------------------------------------------------------
+APPENDIX D — CAPSULE EXAMPLES BY TYPE
+------------------------------------------------------------
+D.1  Product
+{
+  "@context": "https://agentnet.ai/context",
+  "@type": "agentnet:Product",
+  "@id": "agentnet://node/example-com/product/001",
+  "name": "EcoSmart LED Lamp",
+  "description": "Energy-efficient lamp with adaptive brightness.",
+  "sku": "LED-001",
+  "brand": "EcoSmart",
+  "offers": { "@type": "Offer", "price": "49.99", "priceCurrency": "USD" },
+  "agentnet:owner": "agentnet://node/example-com",
+  "agentnet:version": "1.0.0"
+}
+
+D.2  Organization
+{
+  "@context": "https://agentnet.ai/context",
+  "@type": "agentnet:Organization",
+  "@id": "agentnet://node/example-com/org",
+  "name": "Example Industries LLC",
+  "url": "https://example.com",
+  "agentnet:owner": "agentnet://node/example-com",
+  "agentnet:version": "1.0.0"
+}
+
+D.3  Event
+{
+  "@context": "https://agentnet.ai/context",
+  "@type": "agentnet:Event",
+  "@id": "agentnet://node/example-com/event/ai-summit",
+  "name": "AI Summit 2026",
+  "startDate": "2026-05-14T09:00:00Z",
+  "location": { "@type": "Place", "name": "Tech Center Conference Hall" },
+  "agentnet:owner": "agentnet://node/example-com",
+  "agentnet:version": "1.0.0"
+}
+
+D.4  Article
+{
+  "@context": "https://agentnet.ai/context",
+  "@type": "agentnet:Article",
+  "@id": "agentnet://node/example-com/article/aio-intro",
+  "headline": "Understanding Agent Intelligence Optimization",
+  "datePublished": "2025-10-20",
+  "author": "Steven W. Rouse",
+  "inLanguage": "en-US",
+  "agentnet:owner": "agentnet://node/example-com",
+  "agentnet:version": "1.0.0"
+}
+
+------------------------------------------------------------
+APPENDIX E — VALIDATOR RULES REFERENCE
+------------------------------------------------------------
+Rule ID  Description                         Severity   Recommended Action
+---------------------------------------------------------------------------
+VAL-001  Missing @context                    BLOCKER    Add required field
+VAL-002  Invalid URI                         BLOCKER    Use absolute URI
+VAL-003  Duplicate @id                       BLOCKER    Mint new identity
+VAL-004  Expired timestamp                   WARNING    Refresh metadata
+VAL-005  Deprecated property                 INFO       Replace with latest
+VAL-006  Schema mismatch vs ANS              WARNING    Align with current ANS
+VAL-007  Unrecognized namespace              INFO       Register namespace
+VAL-008  Missing signature                   WARNING    Sign capsule/manifest
+VAL-009  Currency normalization failure      INFO       Use ISO 4217
+VAL-010  Missing localization                 INFO       Add inLanguage/region
+
+------------------------------------------------------------
+APPENDIX F — GRAPH TRAVERSAL EXAMPLES
+------------------------------------------------------------
+[DIAGRAM PLACEHOLDER — Graph Traversal Model]
+
+Organization → Product → Offer → Event (link chain)
+{
+  "@id": "agentnet://node/example-com/org",
+  "agentnet:hasPart": "agentnet://node/example-com/product/001"
+}
+{
+  "@id": "agentnet://node/example-com/product/001",
+  "agentnet:offers": "agentnet://node/example-com/offer/001"
+}
+{
+  "@id": "agentnet://node/example-com/offer/001",
+  "agentnet:promotedAt": "agentnet://node/example-com/event/ai-summit"
+}
+
+------------------------------------------------------------
+APPENDIX G — BRANDING GUIDELINES
+------------------------------------------------------------
+Core Concept Mark (CCM)
+{
+  "Internet": "Humans",
+  "AgentNet": "Machines"
+}
+
+Usage
+• Multi-line, two-space indentation
+• Monospace (JetBrains Mono/Consolas)
+• Size: 40% of “AGENTNET” wordmark height
+• Left-aligned directly beneath the wordmark
+• Color: #1E1E1E (black) or white on dark background
+• Spacing: ≈ 8 pt between wordmark and brace
+
+Forbidden Treatments
+• Do not omit quotes or braces
+• Do not recolor individual keys/values
+• Do not wrap with decorative shapes that obscure brackets
+
+========== END PART 5 / CONTINUE BELOW ==========
+------------------------------------------------------------
+APPENDIX H — COMPREHENSIVE GLOSSARY
+------------------------------------------------------------
+A/B Test — An experimental method to compare variants; in AIO, used to validate schema or manifest changes impact on confidence/velocity.
+
+Access Key — A limited-scope token for publishing or telemetry APIs; must not be confused with signing keys.
+
+AIO (Agent Intelligence Optimization) — The practice of optimizing digital resources for discovery, interpretation, and trust by AI agents via AgentNet protocols.
+
+AIO Score — An OPTIONAL composite visibility index combining confidence and velocity; not a substitute for capsuleConfidence reported by resolvers.
+
+Algorithm Identifier — The label (e.g., ed25519) denoting the signature algorithm used in agentnet:signature.
+
+ANS (AgentNet Standards) — The normative specifications governing AgentNet vocabulary, trust, federation, and resolver behavior.
+
+API Envelope — A consistent wrapper format (JSON) for tool outputs and telemetry, enabling predictable parsing.
+
+Approval Window — A policy period during which a signature or bundle remains valid for admission.
+
+Audit Hash — A checksum computed over defined fields to confirm integrity without exposing those field values.
+
+Backoff — A retry strategy (often exponential) used by Capsulizer and tooling to respect server limits or transient errors.
+
+BCP-47 — The standard for language tags (e.g., en-US, fr-FR) used in inLanguage.
+
+BLOCKER — Highest severity validation issue; capsule MUST be rejected until fixed.
+
+Cache-Control — HTTP header controlling client/proxy caching; important for capsule and manifest refresh patterns.
+
+Canonical (Human) — The https:// URI that best represents the human-facing resource.
+
+Canonical (Machine) — The agentnet:// URI that uniquely identifies the machine object (capsule/node).
+
+Capsule — A structured, typed JSON-LD representation of a single unit of knowledge.
+
+Capsule Feed — A paginated listing of capsule URLs enabling incremental harvesting.
+
+Capsule Map — The logical graph composed of capsules and typed relations among them.
+
+Capsule Reliability — Informal measure of a capsule’s history of validation success and signature integrity.
+
+Capsulizer (ANT-Capsulizer) — AgentNet subsystem that discovers, fetches, validates, and enriches capsules.
+
+Checksum — A cryptographic digest (e.g., SHA-256) verifying data integrity.
+
+CI/CD — Continuous Integration/Continuous Delivery pipelines automating validation and publishing.
+
+Confidence (capsuleConfidence) — Quantitative score (0–100) reflecting current trust in a capsule.
+
+Confidence Decay — Policy-driven reduction of confidence over time without updates or traversal.
+
+Confidence Factors — The normalized components (schema, signature, provenance, federation, freshness, velocity) contributing to confidence.
+
+Contact (agentnet:contact) — An email or URL for Node operator communications.
+
+Context (@context) — JSON-LD context mapping names to IRIs; defines semantics for types/properties.
+
+CRR (Canonical Root Resolver) — A designated resolver used as a discovery anchor; may delegate to peers.
+
+Currency Code — ISO 4217 code (USD, EUR, JPY) for offers and prices.
+
+Data Consistency — The absence of contradictions within or across capsules.
+
+Data Lineage — The documented history of a data item’s origin and transformations (see Provenance).
+
+Dataset — A collection of records; MAY be represented by multiple capsules linked by hasPart.
+
+Deduplication — The process of detecting and resolving duplicate or conflicting capsules.
+
+Delta — A structured change packet in a trust bundle describing one or more events.
+
+Deprecation — The planned phase-out of a property or type, accompanied by migration guidance.
+
+Deterministic — Producing the same output given the same inputs and policies.
+
+Did:key — A decentralized identifier method often used for signing keys.
+
+Discovery — The Capsulizer process that identifies manifests, sitemaps, and feeds to harvest.
+
+Dual Canonicality — The practice of maintaining both human (https://) and machine (agentnet://) canonicals.
+
+ETag — An HTTP validator indicating a version of a resource for conditional requests.
+
+Event — A time-bounded occurrence; an entity type represented as a capsule.
+
+Exception Log — A record of validation or processing errors.
+
+Expiration — The time after which a signature, key, or bundle is no longer valid.
+
+Federation — The network of resolvers synchronizing trust state and confidence models.
+
+Federation Agreement — The degree to which peer resolvers converge on state or scores.
+
+Fingerprint — A short representation (hash) of a key or certificate for verification.
+
+Freshness — A measure of recency for a capsule or manifest update.
+
+Graph Consistency — A state where linked capsules form a coherent, non-contradictory network.
+
+Harvester — A component (within Capsulizer) that fetches content for validation.
+
+Header (HTTP) — Metadata in HTTP responses/requests; relevant ones include Cache-Control, ETag, Last-Modified, Retry-After.
+
+Human Canonical — See Canonical (Human).
+
+Identifier (@id) — A stable, absolute URI uniquely referencing a capsule.
+
+Immutable ID — An ID that never changes for the same real-world entity.
+
+In Language (inLanguage) — The BCP-47 language tag for content localization.
+
+Indexability — The degree to which capsules are discoverable and registrable by resolvers.
+
+Integrity — Assurance that data is complete and unaltered (via checksums, signatures).
+
+Issuer (agentnet:issuer) — The Node or resolver that signed or created a trust bundle or signature.
+
+JSON-LD — JSON for Linking Data; the format used for AgentNet capsules.
+
+Key Rotation — A planned procedure for replacing cryptographic keys while preserving continuity.
+
+Latency Budget — The maximum acceptable delay for resolver ingestion or traversal responses.
+
+Linter — A tool that checks manifests or capsules for style and policy compliance beyond strict schema.
+
+Localization — Adapting content for language/region; represented via inLanguage and related properties.
+
+Manifest (agentnet-manifest.json) — The Node’s authoritative declaration of ownership and inventory.
+
+Member Of (agentnet:memberOf) — A relation linking a capsule to a parent collection or organization.
+
+Metrics (Telemetry) — Quantitative measurements of Node health and activity.
+
+Namespace — A URI prefix that disambiguates property vocabularies (e.g., schema:, agentnet:, ext:).
+
+Node — A registered entity that owns and publishes capsules.
+
+Node Console — An operational dashboard showing capsule counts, confidence distributions, error rates, velocity, and federation status.
+
+Node Velocity — A measure of how often agents access a Node’s capsules.
+
+Normalization — Converting values to standard formats (ISO dates, currency codes, SI units).
+
+Offer — A purchasable proposition attached to a product/service; may include price, currency, availability.
+
+Opaque Identifier — An ID with no human-readable semantics; fine if stable and unique.
+
+Owner (agentnet:owner) — The Node that claims authorship/ownership of a capsule.
+
+Page Object — A human-facing page that may correspond to one or more capsules.
+
+Pagination — Splitting large lists (feeds) into pages with nextPage links.
+
+Penalty — A reduction applied to a factor score due to issues (e.g., stale timestamps).
+
+Person — An individual entity represented as a capsule.
+
+Place — A physical location represented as a capsule.
+
+Policy — A set of resolver rules controlling validation, scoring, and federation.
+
+Predicate — A property in RDF/JSON-LD that links a subject to an object (relation).
+
+Provenance — The documented lineage of a capsule, including issuedBy, issuedAt, and previousVersion.
+
+Provenance Chain — The sequential set of versions/changes establishing a capsule’s lineage.
+
+Public Key — The verifier’s key used to check signatures against a Node’s published identity.
+
+Rate Limit — A server-imposed limit on request rates; conveyed via crawlDelay or HTTP 429/Retry-After.
+
+Reason (reasons[]) — An explainability record returned with validation or confidence calculations.
+
+Record Collision — Two different real-world items sharing the same @id; must be resolved.
+
+Reference Implementation — An SDK or service illustrating correct behavior of a standard.
+
+Registration — The act of adding verified Node/capsules to resolver state.
+
+Relation — A typed link between capsules (relatedTo, hasPart, memberOf, offers, promotedAt).
+
+Reliability Window — A configurable time range considered acceptable for freshness.
+
+Replay Attack — An adversarial reuse of a valid signature; mitigated with timestamps and nonces.
+
+Resolver — A system that validates, registers, scores, and federates capsules.
+
+Retry-After — HTTP header indicating when a client SHOULD retry a request after a 429/503.
+
+Revocation — The invalidation of a key or signature; MUST be distributed via manifests or bundles.
+
+RFD (Request for Discussion) — A community proposal stage for ANS changes.
+
+Roadmap — A planned sequence of ANS features or Resolver capabilities.
+
+SARIF — Static Analysis Results Interchange Format; useful for validator outputs.
+
+Schema — The set of types, properties, and constraints governing a data model.
+
+Schema Drift — Divergence between intended and actual published schema over time.
+
+Schema Fidelity — Degree to which a capsule adheres to the declared schema and constraints.
+
+Schema Version — The release identifier for a given schema context.
+
+Search — Human information retrieval process; distinct from traversal for agents.
+
+Security Profile — A resolver’s rules regarding algorithms, key lengths, and acceptance criteria.
+
+Service — An offering that performs work or provides access, represented as a capsule.
+
+Signature (Digital) — A cryptographic proof over data content that can be verified with a public key.
+
+Sitemap (agentnet-sitemap.json) — A Node-provided enumeration of capsule URLs and metadata.
+
+Soft Delete — A state that marks capsules as inactive without removing references.
+
+Source of Truth — The authoritative system from which capsules are generated.
+
+Staleness — A condition where timestamps exceed policy windows.
+
+Standard Deviation (Ops) — A dispersion metric sometimes used for confidence trend analysis.
+
+Subject — The thing a capsule is “about”; in JSON-LD, the node identified by @id.
+
+Telemetry — Operational data about Node performance and traversal.
+
+Template — A pre-structured capsule/manifest layout used to generate records consistently.
+
+Throttle — A controlled reduction in request rate to respect server capacity.
+
+Time Window — A bounded period used for freshness or velocity calculations.
+
+Traversal — Agent movement through linked capsules based on typed relations.
+
+Trust — The degree of belief in data integrity and authorship.
+
+Trust Bundle — A signed package of verified updates propagated among resolvers.
+
+TTL (Time To Live) — A policy or cache lifetime defining how long data is considered valid.
+
+Type (@type) — The class of an entity (agentnet:Product, schema:Event, etc.).
+
+URI — Uniform Resource Identifier; MUST be absolute for @id.
+
+Validation — The process of checking schema, signatures, and policies.
+
+Validation Level — Severity ranking: BLOCKER, WARNING, INFO.
+
+Value Set — A controlled list of allowed values (enum) for a property.
+
+Velocity — A metric of agent interactions over time.
+
+Version (agentnet:version) — A value indicating the revision of a capsule.
+
+Watermark (Branding) — A visual mark used in documents; not used for machine semantics.
+
+Webhook — A callback URL that receives notifications (e.g., publish, validate, bundle events).
+
+Well-Known Location — A predictable URL for manifests (e.g., /.well-known/ or /agentnet-manifest.json).
+
+Workflow — A defined sequence of actions (validate → sign → publish → notify → monitor).
+
+------------------------------------------------------------
+APPENDIX I — DIAGRAM INDEX
+------------------------------------------------------------
+• SEO→AIO Transition Timeline — §1
+• Node–Capsule–Resolver Relationship — §1/§2
+• Capsule Anatomy Overview — §3
+• Manifest Validation Workflow — §4
+• Capsule Feed Pagination Flow — §4
+• Trust Score Computation Model — §5
+• Capsulizer Traversal Flow — §6
+• Data Quality Funnel — §7
+• Telemetry Feedback Loop — §8
+• Human + Machine Web Coexistence — §9
+• Federation Topology Map — §10
+• AIO CI/CD Flow Diagram — §11
+• Readiness Checklist Layout — §12
+• Document Architecture Overview — Preface
+
+------------------------------------------------------------
+END OF DOCUMENT
+------------------------------------------------------------
+AgentNet AIO Guide v1.0.0
+© 2025 AgentNet. All Rights Reserved.
